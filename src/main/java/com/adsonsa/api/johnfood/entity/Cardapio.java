@@ -23,7 +23,6 @@ public class Cardapio {
     private Boolean disponivel;
 
     private BigDecimal valor;
-
     /*
      * ManyToOne
      * ManyToMany

@@ -1,6 +1,8 @@
 package com.adsonsa.api.johnfood.repository;
 
+import com.adsonsa.api.johnfood.dto.CardapioDto;
 import com.adsonsa.api.johnfood.entity.Cardapio;
+import com.adsonsa.api.johnfood.repository.projection.CardapioProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -10,7 +12,19 @@ import java.util.List;
 @Repository
 public interface CardapioRespository extends JpaRepository<Cardapio, Integer> {
 
-    @Query(value = "SELECT * FROM cardapio c WHERE c.categoria_id = ?1 AND c.disponivel = true", nativeQuery = true)
-    List<Cardapio> findByCategoria(final Integer categoria);
+    // retorna um cardapioDTO
+    @Query("SELECT new com.adsonsa.api.johnfood.dto.CardapioDto(c.nome, c.descricao, c.valor, c.categoria.nome) " +
+            "FROM Cardapio c WHERE c.nome LIKE %:nome% AND c.disponivel = true")
+    List<CardapioDto> findAllByNome(final String nome);
+
+    @Query(value = "SELECT" +
+            " c.nome as nome," +
+            " c.descricao as descricao," +
+            " c.valor as valor," +
+            " cat.nome as nomeCategoria " +
+            " FROM cardapio c" +
+            " INNER JOIN categorias cat on c.categoria_id = cat.id" +
+            " WHERE c.categoria_id = ?1 AND c.disponivel = true", nativeQuery = true)
+    List<CardapioProjection> findByCategoria(final Integer categoria);
 
 }

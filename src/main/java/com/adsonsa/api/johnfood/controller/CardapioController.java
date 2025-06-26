@@ -1,7 +1,9 @@
 package com.adsonsa.api.johnfood.controller;
 
+import com.adsonsa.api.johnfood.dto.CardapioDto;
 import com.adsonsa.api.johnfood.entity.Cardapio;
 import com.adsonsa.api.johnfood.repository.CardapioRespository;
+import com.adsonsa.api.johnfood.repository.projection.CardapioProjection;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,11 +30,18 @@ public class CardapioController {
     public ResponseEntity<List<Cardapio>> consultarTodos() {
         return ResponseEntity.status(HttpStatus.OK).body(cardapioRespository.findAll());
     }
+    // Native Query Por Like Name
+    @GetMapping("/nome/{nome}/disponivel")
+    public ResponseEntity<List<CardapioDto>> consultarPorNome(@PathVariable(value = "nome") final String nome) {
+        return ResponseEntity.status(HttpStatus.OK).body(cardapioRespository.findAllByNome(nome));
+    }
+
     // Native Query
     @GetMapping("/categoria/{categoria_id}/disponivel")
-    public ResponseEntity<List<Cardapio>> consultarTodosComQuery(@PathVariable(value = "categoria_id") final Integer categoria_id) {
+    public ResponseEntity<List<CardapioProjection>> consultarTodosComQuery(@PathVariable(value = "categoria_id") final Integer categoria_id) {
         return ResponseEntity.status(HttpStatus.OK).body(cardapioRespository.findByCategoria(categoria_id));
     }
+
 
     // busca por email e cpf
     @GetMapping("/{id}/")

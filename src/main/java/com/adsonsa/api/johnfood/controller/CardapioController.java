@@ -3,15 +3,22 @@ package com.adsonsa.api.johnfood.controller;
 import com.adsonsa.api.johnfood.dto.CardapioDto;
 import com.adsonsa.api.johnfood.entity.Cardapio;
 import com.adsonsa.api.johnfood.repository.CardapioRespository;
+import com.adsonsa.api.johnfood.repository.especification.CardaponSpec;
 import com.adsonsa.api.johnfood.repository.projection.CardapioProjection;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RequestMapping("/cardapio")
@@ -27,19 +34,34 @@ public class CardapioController {
 
     // listar todos
     @GetMapping
-    public ResponseEntity<List<Cardapio>> consultarTodos() {
-        return ResponseEntity.status(HttpStatus.OK).body(cardapioRespository.findAll());
+    public ResponseEntity<Page<Cardapio>> consultarTodos(@RequestParam("page") final Integer page, @RequestParam("size") final Integer size,
+                                                         @RequestParam(value = "sort", required = false) Sort.Direction sort,
+                                                         @RequestParam(value = "property",required = false)String property) {
+        Pageable pageable = Objects.isNull(sort) ?
+                PageRequest.of(page, size, Sort.by(sort, property))
+                : PageRequest.of(page, size);
+        return ResponseEntity.status(HttpStatus.OK).body(cardapioRespository.findAll(pageable));
     }
     // Native Query Por Like Name
     @GetMapping("/nome/{nome}/disponivel")
-    public ResponseEntity<List<CardapioDto>> consultarPorNome(@PathVariable(value = "nome") final String nome) {
-        return ResponseEntity.status(HttpStatus.OK).body(cardapioRespository.findAllByNome(nome));
+    public ResponseEntity<List<Cardapio>> consultarPorNome(@PathVariable(value = "nome") final String nome,
+                                                              @RequestParam("page") final Integer page, @RequestParam("size") final Integer size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.status(HttpStatus.OK).body((List<Cardapio>) cardapioRespository.findAll(Specification.where(
+                CardaponSpec.nome(nome))
+                .and(CardaponSpec.disponivel(true)), pageable).getContent());
     }
 
     // Native Query
     @GetMapping("/categoria/{categoria_id}/disponivel")
-    public ResponseEntity<List<CardapioProjection>> consultarTodosComQuery(@PathVariable(value = "categoria_id") final Integer categoria_id) {
-        return ResponseEntity.status(HttpStatus.OK).body(cardapioRespository.findByCategoria(categoria_id));
+    public ResponseEntity<List<Cardapio>> consultarTodosComQuery(@PathVariable(value = "categoria_id") final Integer categoria_id,
+                                                                           @RequestParam("page") final Integer page,
+                                                                           @RequestParam("size") final Integer size)
+    {Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.status(HttpStatus.OK).body(cardapioRespository.findAll(Specification.where(
+                CardaponSpec.categoria(categoria_id)
+                .and(CardaponSpec.disponivel(true))
+        ),pageable).getContent());
     }
 
 
